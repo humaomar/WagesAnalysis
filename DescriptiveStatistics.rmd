@@ -1,0 +1,96 @@
+
+if(!require(psych)){install.packages("psych")}
+if(!require(DescTools)){install.packages("DescTools")}
+if(!require(Rmisc)){install.packages("Rmisc")}
+if(!require(FSA)){install.packages("FSA")}
+if(!require(plyr)){install.packages("plyr")}
+if(!require(boot)){install.packages("boot")}
+
+
+WageRatesbyOR<-read.csv("D:/BigDataCert/CKME-136/DataSets/112Wageratesbyoccupationbyregion.csv",header=T,sep=",",encoding="UTF-8")
+
+names(WageRatesbyOR)[1] <- gsub("[X.U.FEFF.]", "", names(WageRatesbyOR)[1])
+
+WageRatesbyOR$Value <- as.numeric(as.character(WageRatesbyOR$Value))
+
+WageRatesbyOR[is.na(WageRatesbyOR)] <- 0
+
+##WageRatesbyOR$Value <- as.numeric(levels(WageRatesbyOR$Value))[WageRatesbyOR$Value]
+##WageRatesbyOR$Value <- as.numeric(WageRatesbyOR$Value)
+
+
+str(WageRatesbyOR)
+
+summary(WageRatesbyOR)
+
+library(Hmisc)
+
+cor.test(WageRatesbyOR$Year, WageRatesbyOR$Value, method="pearson")
+
+WageRatesbyOR$Year
+
+head(WageRatesbyOR$Geography)
+
+library(psych)
+
+describeBy(WageRatesbyOR$Value, group = WageRatesbyOR$Wage: WageRatesbyOR$Geography, digits= 4)
+
+write.table(WageGeo, "D:/BigDataCert/CKME-136/DataSets/WageGeo.csv",sep=",")
+
+
+WageYr<-describeBy(WageRatesbyOR$Value, 
+           group = WageRatesbyOR$Year,
+           digits= 4)
+
+describeBy(WageRatesbyOR$Value, 
+           group = WageRatesbyOR$Occupation,
+           digits= 4)
+
+
+summary(WageRatesbyOR)
+
+mean(WageRatesbyOR$Attendees)
+
+###### 2 ######
+WageRatesbyISE<-read.csv("D:/BigDataCert/CKME-136/DataSets/113Wagesbyimmigrantstatusandeducation.csv",header=T,sep=",",encoding="UTF-8")
+
+names(WageRatesbyISE)[1] <- gsub("[X.U.FEFF.]", "", names(WageRatesbyISE)[1])
+
+str(WageRatesbyISE)
+
+summary(WageRatesbyISE)
+
+cor.test(WageRatesbyISE$Year, WageRatesbyISE$Value, method="pearson")
+
+######## 3 #########
+
+
+EmpWages<-read.csv("D:/BigDataCert/CKME-136/DataSets/114Wagesofemployees.csv",header=T,sep=",",encoding="UTF-8")
+
+names(EmpWages)[1] <- gsub("[X.U.FEFF.]", "", names(EmpWages)[1])
+
+str(EmpWages)
+
+summary(EmpWages)
+
+cor.test(EmpWages$Year, EmpWages$Value, method="pearson")
+
+####### 4 #######
+
+WageRatesbyIR<-read.csv("D:/BigDataCert/CKME-136/DataSets/115Wageratesbyindustrybyregion.csv",header=T,sep=",",encoding="UTF-8")
+
+names(WageRatesbyIR)[1] <- gsub("[X.U.FEFF.]", "", names(WageRatesbyIR)[1])
+
+WageRatesbyIR$Value <- as.numeric(as.character(WageRatesbyIR$Value))
+
+WageRatesbyIR[is.na(WageRatesbyIR)] <- 0
+
+
+which(is.na(WageRatesbyIR$Value))
+
+str(WageRatesbyIR)
+
+summary(WageRatesbyIR)
+
+
+cor.test(WageRatesbyIR$Year, WageRatesbyIR$Value, method="pearson")
