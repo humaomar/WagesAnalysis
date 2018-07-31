@@ -1,0 +1,349 @@
+
+if(!require(psych)){install.packages("psych")}
+if(!require(DescTools)){install.packages("DescTools")}
+if(!require(Rmisc)){install.packages("Rmisc")}
+if(!require(FSA)){install.packages("FSA")}
+if(!require(plyr)){install.packages("plyr")}
+if(!require(boot)){install.packages("boot")}
+if(!require(plyr)){install.packages("dplyr")}
+if(!require(ggplot2)){install.packages("ggplot2")}
+if(!require(openxlsx)){install.packages("openxlsx")}
+
+library(openxlsx)
+
+
+###### 1 ######
+###Import data in WageRatesbyOR DataFrame
+WageRatesbyOR<-read.csv("D:/BigDataCert/CKME-136/DataSets/112Wageratesbyoccupationbyregion.csv",header=T,sep=",",encoding="UTF-8")
+###Renaming the Column Year
+names(WageRatesbyOR)[1] <- gsub("[X.U.FEFF.]", "", names(WageRatesbyOR)[1])
+
+
+###Type Conversion
+WageRatesbyOR$Value <- as.numeric(as.character(WageRatesbyOR$Value))
+
+###Data with Missing value for wage
+WageRatesbyOR[is.na(WageRatesbyOR$Value),]
+
+###Checking count of missing Wage values
+sum(is.na(WageRatesbyOR$Value))
+
+###Removed missing Wage values ### 850
+WageRatesbyOR <- WageRatesbyOR[complete.cases(WageRatesbyOR), ]
+
+WageRatesbyOR_SumTotal <- subset(WageRatesbyOR, Occupation == "Total employees" |  Wagerate == "Total employees" )
+
+require(dplyr) 
+WageRatesbyOR_clean <- anti_join(WageRatesbyOR,WageRatesbyOR_SumTotal)
+
+
+WageRatesbyOR_TotalOntR <- subset(WageRatesbyOR_clean, Geography == "Total, Ontario regions")
+
+WageRatesbyOR_EachR <- subset(WageRatesbyOR_clean, Geography!= "Total, Ontario regions")
+
+
+#write.xlsx(WageRatesbyOR_EachR, "D:/BigDataCert/CKME-136/DataSets/112mydata_new4.xlsx")
+
+###Data Wagerate=="Total employees" was not giving up the correct summing/breakup details so excluded it to have consistent data, problematic data can be viewed at the following excel file
+library(xlsx)
+#write.xlsx(WageRatesbyOR_clean, "D:/BigDataCert/CKME-136/DataSets/112mydata_new.xlsx")
+
+
+###Initial Data Analysis ####
+class(WageRatesbyOR_clean)
+dim(WageRatesbyOR_clean)
+names(WageRatesbyOR_clean)
+str(WageRatesbyOR_clean)
+#table(WageRatesbyOR_clean)
+summary(WageRatesbyOR_clean)
+library(dplyr)
+glimpse(WageRatesbyOR_clean)
+
+
+### Crosschecked Subset using counts
+
+nrow(WageRatesbyOR)
+nrow(WageRatesbyOR_SumTotalR)
+nrow(WageRatesbyOR_clean)
+
+
+###Outlier Detection
+boxplot(WageRatesbyOR_EachR$Value,horizontal = TRUE)
+
+###Initial Data Analysis
+class(WageRatesbyOR_clean)
+dim(WageRatesbyOR_clean)
+names(WageRatesbyOR_clean)
+str(WageRatesbyOR_clean)
+#table(WageRatesbyOR_clean)
+summary(WageRatesbyOR_clean)
+library(dplyr)
+glimpse(WageRatesbyOR_clean)
+
+head(WageRatesbyOR_clean,n=5)
+tail(WageRatesbyOR_clean,n=5)
+
+###Data Visualization
+###Outlier detection
+hist(WageRatesbyOR_EachR$Value,main="Histogram for Ontario Region Wages", xlab="Wage Values", border="blue", col="green")
+summary(WageRatesbyOR_EachR)
+plot(WageRatesbyOR_EachR$Year,WageRatesbyOR_EachR$Value)
+
+boxplot(WageRatesbyOR_EachR$Value ~ WageRatesbyOR_EachR$Year, 
+main="Boxplot for Ontario Region Wages",
+xlab = "Year", ylab = "WageValue",
+col = c("yellow","red","green"),
+las = 2,
+border = "blue")
+
+
+################## Data Analysis
+
+table(WageRatesbyOR_clean$Year)
+table(WageRatesbyOR_clean$Geography)
+table(WageRatesbyOR_clean$Occupation)
+
+###Exploratory Data Analysis
+library(ggplot2)
+###Year Vs Wage Values using scatter plot
+ggplot(data = WageRatesbyOR_EachR, aes(x = Year,y = Value)) + geom_point()
+
+###Year, Wage Values & Geography  using scatter plot
+sp <- ggplot(data = WageRatesbyOR_EachR, aes(x = Year,y = Value, color = Geography)) + geom_point()
+sp
+
+###Year, Wage Values & Geography  using box plot for period interval
+bp <- ggplot(data = WageRatesbyOR_EachR, aes(x = cut(Year, breaks = 5), y = Value, color = Geography)) + geom_boxplot()
+bp
+
+faceted scatterplot
+ggplot(WageRatesbyOR_EachR, aes(Year, Value, color = Geography)) + 
+  geom_point() + 
+  facet_wrap(~ Geography)
+
+faceted scatterplot
+ggplot(WageRatesbyOR_EachR, aes(Year, Value, color = Wagerate)) + 
+  geom_point() + 
+  facet_wrap(~ Wagerate)
+
+####Wagerate analysis
+ggplot(data = WageRatesbyOR_EachR, 
+       aes(x = cut(Year, breaks = 5), y = Value, color = Wagerate)) + 
+ geom_boxplot()
+
+
+ggplot(data = WageRatesbyOR_clean, aes(x = Year,y = Value, color = Wagerate)) + geom_point()
+
+mean_value <- mean(WageRatesbyOR_clean$Value)
+
+######
+
+library(Hmisc)
+
+cor.test(WageRatesbyOR_clean$Year, WageRatesbyOR_clean$Value, method="pearson")
+
+
+
+
+library(psych)
+
+describeBy(WageRatesbyOR$Value, group = WageRatesbyOR$Wage: WageRatesbyOR$Geography, digits= 4)
+
+write.table(WageGeo, "D:/BigDataCert/CKME-136/DataSets/WageGeo.csv",sep=",")
+
+
+WageYr<-describeBy(WageRatesbyOR$Value, 
+           group = WageRatesbyOR$Year,
+           digits= 4)
+
+describeBy(WageRatesbyOR$Value, 
+           group = WageRatesbyOR$Occupation,
+           digits= 4)
+
+
+summary(WageRatesbyOR_clean)
+
+mean(WageRatesbyOR$Attendees)
+
+###### 2 ######
+WageRatesbyISE<-read.csv("D:/BigDataCert/CKME-136/DataSets/113Wagesbyimmigrantstatusandeducation.csv",header=T,sep=",",encoding="UTF-8")
+
+names(WageRatesbyISE)[1] <- gsub("[X.U.FEFF.]", "", names(WageRatesbyISE)[1])
+
+any(is.na(WageRatesbyISE$Value))
+
+###No Data with Missing value for wage
+
+WageRatesbyISE_SumTotal <- subset(WageRatesbyISE, Immig == "Total" | Educationlevel == "Total, all education levels" | Wagerate == "Total employees" | Worktype == "All employees"| Immig == "  Total Landed immigrants")
+
+### & 
+
+
+require(dplyr) 
+WageRatesbyISE_clean <- anti_join(WageRatesbyISE,WageRatesbyISE_SumTotal)
+
+
+WageRatesbyISECanada <- subset(WageRatesbyISE_clean, Geography == "Canada")
+
+WageRatesbyISE_Ontario <- subset(WageRatesbyISE_clean, Geography == "Ontario")
+
+###Outlier Detection
+boxplot(WageRatesbyISE_Ontario$Value,horizontal = TRUE)
+
+###Initial Data Analysis
+class(WageRatesbyISE_Ontario)
+dim(WageRatesbyISE_Ontario)
+names(WageRatesbyISE_Ontario)
+str(WageRatesbyISE_Ontario)
+##table(WageRatesbyOR_Ontario$GEOGRAPHY)
+summary(WageRatesbyISE_Ontario)
+library(dplyr)
+glimpse(WageRatesbyISE_Ontario)
+
+head(WageRatesbyISE_Ontario,n=5)
+tail(WageRatesbyISE_Ontario,n=5)
+
+###Outlier detection
+hist(WageRatesbyISE_Ontario$Value,main="Histogram for Ontario Region Wages", xlab="Wage Values", border="blue", col="green")
+summary(WageRatesbyOR_EachR)
+hist(WageRatesbyISE_Ontario$Value, right=FALSE)
+hist(WageRatesbyISECanada$Value, right=FALSE)
+summary(WageRatesbyISE)
+plot(WageRatesbyISE_Ontario$Year,WageRatesbyISE_Ontario$Value)
+
+boxplot(WageRatesbyISE_Ontario$Value ~ WageRatesbyISE_Ontario$Year, 
+main="Ontario Region Wages Boxplot",
+xlab = "Year", ylab = "WageValue",
+col = c("yellow","red","green"),
+border = "blue")
+
+cor.test(WageRatesbyISE_Ontario$Year, WageRatesbyISE_Ontario$Value, method="pearson")
+
+###Exploratory Data Analysis
+library(ggplot2)
+###Year Vs Wage Values using scatter plot
+ggplot(data = WageRatesbyISE_Ontario, aes(x = Year,y = Value)) + geom_point()
+
+###Year, Wage Values & Geography  using scatter plot
+ggplot(data = WageRatesbyISE_Ontario, aes(x = Year,y = Value, color = Sex)) + geom_point()
+
+###Year, Wage Values & Immig  using box plot for period interval
+ggplot(data = WageRatesbyISE_Ontario, 
+       aes(x = cut(Year, breaks = 5), y = Value, color = Immig)) + 
+ geom_boxplot()
+ 
+###Year, Wage Values & Sex  using box plot for period interval
+ggplot(data = WageRatesbyISE_Ontario, 
+       aes(x = cut(Year, breaks = 5), y = Value, color = Sex)) + 
+ geom_boxplot() 
+
+###Data Scaling/Transformation
+###Year, Wage Values & Immig  using box plot for period interval
+ggplot(data = WageRatesbyISE_Ontario, 
+       aes(x = Year, y = Value, color = Sex)) + 
+geom_boxplot()  +
+  scale_x_log10() + 
+  scale_y_log10()
+ 
+###Year, Wage Values & Sex  using box plot for period interval
+ggplot(data = WageRatesbyISE_Ontario, 
+       aes(x = cut(Year, breaks = 5), y = Value, color = Sex)) + 
+ geom_boxplot() 
+ 
+###Outliers Detection
+WageRatesbyISE_Ontario %>%
+  filter(Value >= mean(WageRatesbyISE_Ontario$Value)) %>%
+  ggplot(aes(x = Year, y = Value, color = Immig)) +
+  geom_boxplot()
+  
+  
+  summary(WageRatesbyISE_Ontario)
+  
+###Works nicely
+  
+ outlier <- WageRatesbyISE_Ontario %>%
+  filter(Value >= 1500    )
+  
+  ggplot(WageRatesbyISE_Ontario, aes(x = Year, y = Value, color = Sex)) + 
+  geom_point() + 
+  facet_wrap(~ Immig)
+  
+   ggplot(WageRatesbyISE_Ontario, aes(x = Year, y = Value, color = Sex)) + 
+  geom_point() + 
+  facet_wrap(~ Worktype)
+  
+##Computing correlation
+
+cor(WageRatesbyISE_Ontario$Year,WageRatesbyISE_Ontario$Value,method="pearson")
+
+m1<-lm(Value~Year,data=WageRatesbyISE_Ontario)
+summary(m1)
+
+par(mfrow=c(2,2))
+plot(m1)
+
+cor(Year, Value = NULL, use = "everything",
+    method = c("pearson", "kendall", "spearman"))
+
+  WageRatesbyISE_Ontario %>%
+  group_by(Sex) %>%
+  dplyr::summarise(N = n(), r = cor(Year, Value))
+  
+  WageRatesbyISE_Ontario %>%
+  group_by(Sex) %>%
+  dplyr::summarise(N = n(), r = cor(Year, Value, use = "pairwise.complete.obs"))
+  
+  WageRatesbyISE_Ontario %>%
+  group_by(Immig) %>%
+  dplyr::summarize(
+    N = n(), 
+    mean(Year), 
+    sd(Year), 
+    mean(Value), 
+    sd(Value), 
+    cor(Year, Value)
+    )
+    
+ ggplot(data = WageRatesbyISE_Ontario, 
+       aes(x = Year, y = Value, color = Immig)) + 
+ geom_point() + 
+  geom_smooth(method = "lm", se = FALSE)
+
+# Create faceted scatterplot
+ggplot(data = WageRatesbyISE_Ontario, 
+       aes(x = Year, y = Value, color = Immig)) +  geom_point() 
+       
+       ggplot(WageRatesbyISE_Ontario, aes(Year, Value, color = Immig)) + 
+  geom_point() + 
+  facet_wrap(~ Immig)
+  
+# Compute correlations for each dataset
+noise_summary <- WageRatesbyISE_Ontario %>%  group_by(Immig) %>%
+  summarize(N = n(), spurious_cor = cor(Year, Value))
+
+# Isolate sets with correlations above 0.2 in absolute strength
+noise_summary %>%
+  filter(abs(spurious_cor) > 0.2)
+  
+
+
+ggplot(data = WageRatesbyISE_Ontario, aes(x = cut(Year, breaks = 5),y = Value, color = Educationlevel)) +  geom_boxplot() 
+
+
+ggplot(data = WageRatesbyISE_Ontario, aes(x = Year, y = Value, color = Sex)) + 
+  geom_point() + 
+  geom_smooth(method = "lm", se = FALSE)
+
+  ggplot(data = WageRatesbyISE_Ontario, aes(x = Year, y = Value, color = Sex)) +
+  geom_point() + 
+  geom_abline(slope = 1, intercept = 0) + 
+  geom_smooth(method = "lm", se = FALSE)
+
+lm(Value ~ Year, data = WageRatesbyISE_Ontario)
+
+mean_value <- mean(WageRatesbyOR_clean$Value)
+
+######
+
+
+
